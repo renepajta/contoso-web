@@ -38,3 +38,4 @@ next-env.d.ts
 # environment variable
 .env
 push.ps1
+.azure
