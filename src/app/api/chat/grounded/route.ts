@@ -21,8 +21,9 @@ async function getData(): Promise<Product[]> {
 
 export async function POST(request: NextRequest) {
   const messages: ChatMessage[] = await request.json();
-  const deployment_id = "gpt-35-turbo";
-  const grounded_uri = `${aiservicesendpoint}openai/deployments/${deployment_id}/extensions/chat/completions?api-version=2023-08-01-preview`;
+  const deployment_id = process.env.CONTOSO_OPENAI_DEPLOYMENT
+  const apiVersion = process.env.CONTOSO_OPENAI_API_VERSION
+  const grounded_uri = `${aiservicesendpoint}openai/deployments/${deployment_id}/extensions/chat/completions?api-version=${apiVersion}`;
 
   const headers = {
     "Content-Type": "application/json",
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
         parameters: {
           endpoint: searchendpoint,
           key: searchkey,
-          indexName: "contoso-manuals-index",
+          indexName: "contoso-products",
           queryType: "vectorSimpleHybrid",
           fieldsMapping: {
             contentFieldsSeparator: "\n",
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest) {
           inScope: true,
           roleInformation:
             "You are an AI assistant for the Contoso Outdoors product information that helps people find information in the shortest amount of text possible. Be brief and concise in your response and include emojis.",
-          embeddingDeploymentName: "text-embedding-ada-002",
+          embeddingDeploymentName: process.env.CONTOSO_OPENAI_EMBEDDING_DEPLOYMENT,
           strictness: 3,
           topNDocuments: 5,
         },
@@ -77,10 +78,8 @@ export async function POST(request: NextRequest) {
   const context = JSON.parse(returnMessage.context.messages[0].content);
 
   const citationReplacement = (val: any, index: number): Citation => {
-    const productId = parseInt(
-      val.filepath.replace(".md", "").replace("product_info_", "")
-    );
-    const product = products.find((p) => p.id === productId)!;
+    const productId = val.filepath
+    const product = products.find((p) => p.slug === productId)!;
     return {
       index: index + 1,
       productId: productId,

@@ -1,20 +1,25 @@
 
 import { type NextRequest } from "next/server";
-const api_endpoint = process.env.PROMPTFLOW_ENDPOINT!;
-const api_key = process.env.PROMPTFLOW_KEY!;
+const api_endpoint = process.env.CONTOSO_CHAT_ENDPOINT!;
+const api_key = process.env.CONTOSO_CHAT_KEY!;
 
 export async function POST(req: NextRequest) {
-  const request_body = await req.json();
+  const { question, customerId, chat_history } = await req.json();
 
   const headers = {
     "Content-Type": "application/json",
-    Authorization: "Bearer " + api_key,
+    //Authorization: "Bearer " + api_key,
+    Authorization: "None",
   };
 
-  const response = await fetch(api_endpoint, {
+  const url = new URL(api_endpoint);
+  url.searchParams.append("question", question);
+  url.searchParams.append("customer_id", customerId);
+  url.searchParams.append("chat_history", JSON.stringify(chat_history));
+
+  const response = await fetch(url.toString(), {
     method: "POST",
     headers: headers,
-    body: JSON.stringify(request_body),
   });
 
   const data = await response.json();
